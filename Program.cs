@@ -6,8 +6,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddDbContext<WeatherContext>(c => c.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
+builder.Services.AddDbContext<WeatherContext>(
+    c => c.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")),ServiceLifetime.Transient);
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient<WeatherService>().ConfigureHttpClient((sp, c) =>
 {
@@ -16,7 +16,7 @@ builder.Services.AddHttpClient<WeatherService>().ConfigureHttpClient((sp, c) =>
 {
     c.Retry.Delay = TimeSpan.FromMilliseconds(1);
     c.Retry.MaxRetryAttempts = 5;
-    c.AttemptTimeout.Timeout = TimeSpan.FromMilliseconds(2000);
+    c.AttemptTimeout.Timeout = TimeSpan.FromMilliseconds(3000);
     c.TotalRequestTimeout.Timeout = TimeSpan.FromMilliseconds(5000);
     c.CircuitBreaker.BreakDuration = TimeSpan.FromMinutes(10);
     c.CircuitBreaker.FailureRatio = 0.6;

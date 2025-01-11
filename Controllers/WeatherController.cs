@@ -12,7 +12,23 @@ public class WeatherController(WeatherService weatherService) : ControllerBase
     [HttpGet]
     public async Task<ActionResult<ApiWeatherDto>> GetWeather([FromQuery] double latitude, [FromQuery] double longitude)
     {
-        var weatherInfo = await weatherService.GetWeatherAsync(latitude, longitude);
-        return weatherInfo != null ? Ok(weatherInfo) : NoContent();
+        var tasks= new List<Task<ApiWeatherDto?>>
+        {
+            weatherService.GetWeatherAsync(latitude, longitude),
+            weatherService.GetWeatherFromDbAsync(latitude, longitude),
+            
+        };
+        var tasksExec = Task.WhenAll(tasks);
+        var result=Task.WhenAny(  tasksExec,Task.Delay(5000));
+        if (result.Result == tasksExec)
+        {
+            if (tasks[0].IsCompletedSuccessfully)
+            {
+             return tasks[0].Result;
+            }
+
+            return tasks[1].Result;
+        }
+        return  default;
     }
 }

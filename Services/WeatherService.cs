@@ -20,15 +20,14 @@ public class WeatherService
         _weatherContext = weatherContext;
         _cache = cache;
     }
-    public async Task<ApiWeatherDto> GetWeatherAsync(double latitude, double longitude)
+    public async Task<ApiWeatherDto?> GetWeatherAsync(double latitude, double longitude)
     {
-      ApiWeatherDto weatherInfo = null;
+      ApiWeatherDto? weatherInfo = null;
       var cachekey = $"WeatherInfo-{latitude}-{longitude}";
-  //We can get weather first from cache if needed get from api.
+      //We can get weather first from cache if needed get from api.
   
         try
         {
-            
             var response = await _httpClient.GetAsync(
                 $"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&hourly=temperature_2m");
             if (response.IsSuccessStatusCode)
@@ -45,7 +44,18 @@ public class WeatherService
                 async c => { return await GetWeatherDataFromDatabase(latitude, longitude); },
                 new MemoryCacheEntryOptions() {SlidingExpiration = TimeSpan.FromMinutes(10)});
         }
-
+       Console.WriteLine("***************task api**************************");
+        return weatherInfo;
+    }
+    public async Task<ApiWeatherDto?> GetWeatherFromDbAsync(double latitude, double longitude)
+    {
+        ApiWeatherDto weatherInfo = null;
+        var cachekey = $"WeatherInfo-{latitude}-{longitude}";
+        //We can get weather first from cache if needed get from api.
+        weatherInfo = await _cache.GetOrCreateAsync(cachekey,
+            async c => { return await GetWeatherDataFromDatabase(latitude, longitude); },
+            new MemoryCacheEntryOptions() {SlidingExpiration = TimeSpan.FromMinutes(10)});
+        Console.WriteLine("________________________task db_____________________");
         return weatherInfo;
     }
 
